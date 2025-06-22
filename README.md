@@ -1,4 +1,4 @@
-# Chomp Game Overview
+# Chomp
 
 This document introduces the Chomp game system, explaining what it is, its core gameplay mechanics, and key technical features. It provides a foundation for understanding the codebase architecture and game implementation.
 
