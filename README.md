@@ -2,8 +2,6 @@
 
 This document introduces the Chomp game system, explaining what it is, its core gameplay mechanics, and key technical features. It provides a foundation for understanding the codebase architecture and game implementation.
 
-For detailed gameplay rules and mechanics, see "Game Rules and Mechanics" (if available in another section). For information about running the game, see "Getting Started". For technical implementation details, see "System Architecture and Core Modules".
-
 ## What is Chomp
 
 Chomp is a terminal-based implementation of the classic two-player strategy game played on a chocolate bar grid. The system is built as a modular C application using `ncurses` for console-based graphics and mouse interaction.
