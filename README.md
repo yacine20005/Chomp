@@ -1,74 +1,115 @@
-# Chomp
+# Chomp Game Overview
 
-## Game Description
+This document introduces the Chomp game system, explaining what it is, its core gameplay mechanics, and key technical features. It provides a foundation for understanding the codebase architecture and game implementation.
 
-Chomp is a two-player strategy game. The game is played on a rectangular chocolate bar made up of chocolate squares. Players take turns taking a chocolate square and all the squares below and to the right of it. The goal of the game is to avoid taking the poisoned chocolate square located at the top left of the bar.
+For detailed gameplay rules and mechanics, see "Game Rules and Mechanics" (if available in another section). For information about running the game, see "Getting Started". For technical implementation details, see "System Architecture and Core Modules".
 
-## Game Rules
+## What is Chomp
 
-1. The game is played by two players.
-2. The chocolate bar is made up of chocolate squares.
-3. Players take turns taking a chocolate square and all the squares below and to the right of it.
-4. The player who takes the poisoned chocolate square located at the top left of the bar loses the game.
+Chomp is a terminal-based implementation of the classic two-player strategy game played on a chocolate bar grid. The system is built as a modular C application using `ncurses` for console-based graphics and mouse interaction.
 
-## Game Objective
+The game implements a tournament structure where multiple matches are played with cumulative scoring, rather than single standalone games. Players interact through mouse clicks on a visual chocolate bar grid displayed in the terminal.
 
-The objective of the game is to avoid taking the poisoned chocolate square located at the top left of the bar.
+### Core Game Concept:
 
-## How to Play
+* 8x16 chocolate bar grid represented by the `Tablette` data structure
+* Two players (`JOUEUR_1` and `JOUEUR_2`) take alternating turns
+* Each move (`Coup`) removes a selected square and all squares below and to the right
+* The poisoned square at position `[0][0]` determines the loser
+* Tournament scoring across multiple matches
 
-1. Start the game by following the compilation and execution instructions below.
-2. Player 1 starts the game.
-3. Use the mouse to select a chocolate square on the bar.
-4. Click on the selected chocolate square to take it and all the squares below and to the right of it.
-5. The next player takes their turn.
-6. The game continues until a player takes the poisoned chocolate square located at the top left of the bar.
+## System Architecture Overview
 
-## Compilation and Execution Instructions
+### Module Organization in Code:
 
-### Compilation
+| Module      | File            | Primary Functions                   | Purpose                            |
+| :---------- | :-------------- | :---------------------------------- | :--------------------------------- |
+| `moteur`    | `src/moteur.c`  | `joueur_coup()`, `manger()`, `adversaire()` | Core game logic and state management |
+| `gui`       | `src/gui.c`     | `lire_coup()`                       | Mouse and keyboard input handling  |
+| `graphics`  | `src/graphics.c`| `afficher_tablette()`, `afficher_gagnant()` | ncurses-based display rendering    |
+| `check`     | `src/check.c`   | `est_legal()`, `est_jeu_termine()`  | Move validation and game state checking |
 
-To compile the game, use the `makefile`:
+## Game State and Data Flow
 
-```sh
-make tout
-```
+### Data Structure Relationships:
 
-### Execution
+* `EtatJeu` serves as the central game state container.
+* `Tablette` represents the 8x16 chocolate bar as a 2D integer array.
+* `Coup` structure contains `ligne` and `colonne` coordinates for player moves.
+* `Joueur` enum alternates between `JOUEUR_1` and `JOUEUR_2`.
 
-To run the game, launch the compiled program:
+The `manger()` function implements the core "eating" mechanic that removes the selected square and all squares below and to the right of it.
 
-```sh
-make lancer
-```
+## Core Gameplay Mechanics
 
-### Available Commands
+### Move Processing and Validation
 
-- `make tout` : compiles the program
-- `make lancer` : runs the program
-- `make clean` : removes the compiled files
-- `make aide` : displays the help
+* **Validation Logic:** The `est_legal()` function in the `check` module validates that:
+    * The selected coordinates are within the 8x16 grid bounds.
+    * The selected square has not already been eaten (removed).
+    * The move follows the game's constraint rules.
+* **Move Application:** The `joueur_coup()` function coordinates the move execution by:
+    * Calling `manger()` to remove the selected square and dependent squares.
+    * Using `adversaire()` to switch the current player.
+    * Updating the `EtatJeu` structure with the new game state.
 
-## Controls and User Interface
+## Tournament Structure and Scoring
 
-- Use the mouse to select a chocolate square on the bar.
-- Click on the selected chocolate square to take it and all the squares below and to the right of it.
-- Press the "q" key to quit the game at any time.
+The system implements a tournament format with multiple matches and cumulative scoring:
 
-## Additional Explanations
+### Tournament Features:
 
-### Game Strategy
+* Multiple matches played in sequence (`NB_MATCHES` constant).
+* Score tracking for both players (`score_j1`, `score_j2`).
+* Match winner determination after each game.
+* Overall tournament winner based on cumulative scores.
+* Board reset between matches while preserving scores.
 
-- The game requires strategic thinking to avoid taking the poisoned chocolate square.
-- Players should try to force their opponent into a position where they have no choice but to take the poisoned square.
+The main game loop in `src/main.c` orchestrates the tournament by managing match progression, score accumulation, and final winner determination.
 
-### Visual Aids
+## User Interface and Controls
 
-- The game interface uses colors to differentiate between existing and taken chocolate squares.
-- The current player is displayed at the top of the screen.
-- The score and match information are displayed on the right side of the screen.
+### Terminal-Based Interface
 
-### Troubleshooting
+The system uses the `ncurses` library for console-based graphics with mouse support.
 
-- If the game does not compile, ensure that all necessary libraries (e.g., ncurses) are installed.
-- If the game does not run, check for any error messages and ensure that the compiled program is in the correct directory.
+### Input Methods:
+
+* Mouse clicking for square selection and move execution.
+* Keyboard input for game control (`'q'` key to quit).
+* Coordinate translation from mouse position to grid coordinates.
+
+### Visual Feedback:
+
+* Color differentiation between available and eaten chocolate squares.
+* Current player display at the top of the screen.
+* Real-time score and match information on the right side.
+* Winner announcement display after each match.
+
+### Display Functions:
+
+* `afficher_tablette()` renders the chocolate bar grid.
+* `afficher_gagnant()` shows match winner.
+* Color-coded visual representation of game state changes.
+
+## Build and Execution System
+
+### Compilation Targets
+
+The `Makefile` provides several build targets for different operations:
+
+| Command        | Target      | Purpose                                   |
+| :------------- | :---------- | :---------------------------------------- |
+| `make tout`    | Compilation | Compiles all source files to create executable |
+| `make lancer`  | Execution   | Runs the compiled `chomp` program         |
+| `make clean`   | Cleanup     | Removes object files and executables      |
+| `make aide`    | Help        | Displays available make targets           |
+
+### Alternative Build:
+
+The system also includes `compilation.sh` as an alternative build script for environments where `make` is not available.
+
+### Dependencies:
+
+* `ncurses` library for terminal interface functionality.
+* GCC compiler for C compilation.
